@@ -22,6 +22,10 @@ class GETMixin(CommonMixin):
             search_by['_id'] = postpath[0]
             is_one_item = True
 
+            if len(postpath) > 1:
+                if postpath[1] == 'content':
+                    pass  # TODO: Image content output
+
         print request.prepath, request.path, request.uri, postpath
 
         d = rotator_database.metadata.find(search_by)
