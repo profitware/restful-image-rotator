@@ -16,6 +16,11 @@ IMAGE_SIGNATURES = {
     '\xFF\xD8\xFF\xE0': 'image/jpeg'
 }
 
+IMAGE_PIL_FORMATS = {
+    'image/png': 'PNG',
+    'image/jpeg': 'JPEG'
+}
+
 mongo_connection = MongoConnectionPool()
 rotator_database = mongo_connection.rotator
 gridfs_instance = GridFS(rotator_database)
@@ -31,6 +36,11 @@ class CommonMixin(object):
                 generate_link(request, image_dict['_id'], 'delete', 'DELETE'),
                 generate_link(request, cut_path([image_dict['_id'], 'content']), 'content', 'GET')
             ]
+
+            if image_dict.get('status') == 'processed':
+                image_dict['links'].append(
+                    generate_link(request, cut_path([image_dict['rotated_image_id'], 'content']), 'rotated', 'GET')
+                )
 
             image_dict['id'] = image_dict.pop('_id')
 

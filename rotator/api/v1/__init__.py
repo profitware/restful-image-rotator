@@ -46,3 +46,4 @@ class RootResource(Resource):
 
 class V1Resource(RootResource):
     pass
+
