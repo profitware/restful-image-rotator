@@ -19,12 +19,22 @@ def has_api_method(child, method):
     return hasattr(child, class_attr) or is_not_leaf
 
 
+def cut_path(path):
+    if not path:
+        return path
+
+    if path[-1] == '':
+        path = path[:-1]
+
+    return path
+
+
 def form_resource_path(prepath, resource_name):
-    if prepath[-1] == '':
-        prepath = prepath[:-1]
+    if not isinstance(resource_name, basestring):
+        resource_name = '/'.join(cut_path(resource_name))
 
     format_string = '/{resource_name}'
-    full_path = '/'.join(prepath)
+    full_path = '/'.join(cut_path(prepath))
 
     if full_path:
         format_string = '/{full_path}/{resource_name}'
@@ -39,3 +49,12 @@ def check_content_type(request):
         content_type_presence |= content_type in request.getHeader('accept')
 
     return content_type_presence
+
+
+def generate_link(request, resource_name, rel_name, method):
+    return_dict = {
+        'href': form_resource_path(request.prepath, resource_name),
+        'ref': rel_name,
+        'method': method
+    }
+    return return_dict

@@ -2,43 +2,17 @@
 
 __author__ = 'Sergey Sobko'
 
-from json import dumps
 from hashlib import md5
 
-from twisted.internet import reactor, task
+from twisted.internet import reactor
+from twisted.internet.task import deferLater
+from twisted.web import server
 
-from txmongo import MongoConnectionPool
-from txmongo.gridfs import GridFS
-
-from rotator.api.v1 import RootResource
-from rotator.api.v1.common import *
-
-
-# Ref: http://en.wikipedia.org/wiki/List_of_file_signatures
-IMAGE_SIGNATURES = {
-    '\x89\x50\x4E\x47\x0D\x0A\x1A\x0A': 'image/png',
-    '\xFF\xD8\xFF\xE0': 'image/jpeg'
-}
-
-mongo_connection = MongoConnectionPool()
-rotator_database = mongo_connection.rotator
-gridfs_instance = GridFS(rotator_database)
+from rotator.api.v1.common import form_resource_path, check_content_type
+from rotator.api.v1.rotator_api.common import rotator_database, gridfs_instance, IMAGE_SIGNATURES, CommonMixin
 
 
-class RotatorResource(RootResource):
-    isLeaf = True
-
-    def render_GET(self, request):
-        assert check_content_type(request)
-
-        request.setHeader('content-type', 'application/json')
-
-        return_dict = {
-            'images': list()
-        }
-
-        return dumps(return_dict)
-
+class POSTMixin(CommonMixin):
     def render_POST(self, request):
         assert check_content_type(request)
 
@@ -78,4 +52,7 @@ class RotatorResource(RootResource):
 
         request.setResponseCode(201)
 
-        return dumps({'images': uploaded_files_metadata})
+        d = deferLater(reactor, 0, lambda: uploaded_files_metadata)
+        d.addCallback(self._image_info_success, request, False)
+
+        return server.NOT_DONE_YET

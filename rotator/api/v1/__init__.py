@@ -30,11 +30,9 @@ class RootResource(Resource):
             for method, rel_name in RELS.iteritems():
 
                 if has_api_method(child, method):
-                    links_list.append({
-                        'href': form_resource_path(request.prepath, resource_name),
-                        'ref': rel_name,
-                        'method': method
-                    })
+                    links_list.append(
+                        generate_link(request, resource_name, rel_name, method)
+                    )
 
         return_dict = {
             'version': api_version,
