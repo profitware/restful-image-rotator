@@ -9,6 +9,7 @@ RELS = {
     'POST': 'edit',
     'DELETE': 'delete'
 }
+ACCEPTABLE_CONTENT_TYPES = ( 'application/json', '*/*')
 
 
 def has_api_method(child, method):
@@ -29,3 +30,12 @@ def form_resource_path(prepath, resource_name):
         format_string = '/{full_path}/{resource_name}'
 
     return format_string.format(full_path=full_path, resource_name=resource_name)
+
+
+def check_content_type(request):
+    content_type_presence = False
+
+    for content_type in ACCEPTABLE_CONTENT_TYPES:
+        content_type_presence |= content_type in request.getHeader('accept')
+
+    return content_type_presence

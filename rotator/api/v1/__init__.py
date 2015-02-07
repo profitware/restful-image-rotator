@@ -13,6 +13,8 @@ class RootResource(Resource):
     def getChild(self, name, request):
         print 'getChild', name, request
 
+        assert check_content_type(request)
+
         if name == '':
             return self
 
