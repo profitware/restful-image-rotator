@@ -43,15 +43,25 @@ class CommonMixin(object):
                 )
 
             image_dict['id'] = image_dict.pop('_id')
+            try:
+                image_dict.pop('gridfs_id')
+            except KeyError:
+                pass
 
             print image_dict
 
             images_list.append(image_dict)
 
         if is_one_item:
-            return_dict = {
-                'image': images_list[0]
-            }
+            try:
+                return_dict = {
+                    'image': images_list[0]
+                }
+            except IndexError:
+                return_dict = {
+                    'error': 'Image not found'
+                }
+                request.setResponseCode(404)
         else:
             return_dict = {
                 'images': images_list

@@ -51,12 +51,22 @@ class POSTMixin(CommonMixin):
             upsert=True
         )
 
+    def _image_to_gridfs_success(self, value, image_id):
+        rotator_database.metadata.find_and_modify(
+            query={'_id': image_id},
+            update={'$set': {
+                'gridfs_id': value
+            }},
+            upsert=True
+        )
+
     def _add_image_to_gridfs(self, image_id, image_content, image_content_type):
-        gridfs_instance.put(
+        d = gridfs_instance.put(
             image_content,
             content_type=image_content_type,
             md5hash=image_id
         )
+        d.addCallback(self._image_to_gridfs_success, image_id)
 
     def render_POST(self, request):
         assert check_content_type(request)

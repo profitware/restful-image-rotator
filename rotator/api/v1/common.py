@@ -9,7 +9,7 @@ RELS = {
     'POST': 'edit',
     'DELETE': 'delete'
 }
-ACCEPTABLE_CONTENT_TYPES = ( 'application/json', '*/*')
+ACCEPTABLE_CONTENT_TYPES = ('application/json', '*/*', 'image/png', 'image/jpeg')
 
 
 def has_api_method(child, method):
