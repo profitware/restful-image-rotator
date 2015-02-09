@@ -9,6 +9,7 @@ from rotator.api.v1 import RootResource, V1Resource
 from rotator.api.v1.rotator_api import RotatorResource
 from rotator.api.v1.stuff import HTMLResource
 
+
 def create_api():
     root_resource = RootResource()
 
@@ -21,6 +22,10 @@ def create_api():
     return root_resource
 
 
+def get_site():
+    return server.Site(create_api())
+
+
 if __name__ == '__main__':
-    endpoints.serverFromString(reactor, "tcp:8080").listen(server.Site(create_api()))
+    endpoints.serverFromString(reactor, "tcp:8080").listen(get_site())
     reactor.run()

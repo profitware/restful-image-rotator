@@ -4,9 +4,9 @@ __author__ = 'Sergey Sobko'
 
 from json import dumps
 
-from txmongo import MongoConnectionPool
 from txmongo.gridfs import GridFS
 
+from rotator.api import mongo_connection
 from rotator.api.v1.common import cut_path, generate_link
 
 
@@ -23,7 +23,6 @@ IMAGE_PIL_FORMATS = {
 
 ERROR_CHECK_BACK_LATER = 'CHECK_BACK_LATER'
 
-mongo_connection = MongoConnectionPool()
 rotator_database = mongo_connection.rotator
 gridfs_instance = GridFS(rotator_database)
 

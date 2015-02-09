@@ -3,12 +3,9 @@
 __author__ = 'Sergey Sobko'
 
 from hashlib import md5
-from time import sleep
 from io import BytesIO
 from cStringIO import StringIO
 
-from twisted.internet import reactor
-from twisted.internet.task import deferLater
 from twisted.internet.threads import deferToThread
 from twisted.web import server
 
@@ -124,7 +121,6 @@ class POSTMixin(CommonMixin):
 
         request.setResponseCode(201)
 
-        d = deferLater(reactor, 0, lambda: uploaded_files_metadata)
-        d.addCallback(self._image_info_success, request, False, is_posted=True)
+        self._image_info_success(uploaded_files_metadata, request, False, is_posted=True)
 
         return server.NOT_DONE_YET
