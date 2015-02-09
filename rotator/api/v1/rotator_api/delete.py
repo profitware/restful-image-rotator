@@ -7,13 +7,16 @@ from json import dumps
 from twisted.internet import defer
 from twisted.web import server
 
+from txmongo.gridfs import GridFS
+
+from rotator.api import mongo_connection
 from rotator.api.v1.common import check_content_type, cut_path
-from rotator.api.v1.rotator_api.common import rotator_database, gridfs_instance, CommonMixin, ERROR_CHECK_BACK_LATER
+from rotator.api.v1.rotator_api.common import CommonMixin, ERROR_CHECK_BACK_LATER
 
 
 class DELETEMixin(CommonMixin):
     def _image_get_info(self, value, request):
-        d = rotator_database.metadata.find({})
+        d = mongo_connection.get('rotator_database').metadata.find({})
 
         d.addCallback(self._image_info_success, request, False)
         d.addErrback(self._image_info_failure, request)
@@ -31,7 +34,7 @@ class DELETEMixin(CommonMixin):
     def _image_delete_success(self, value, request, file_ids):
         dl = []
         for file_id in file_ids:
-            dl.append(gridfs_instance.delete(file_id))
+            dl.append(GridFS(mongo_connection['rotator_database']).delete(file_id))
 
         d = defer.DeferredList(dl)
         d.addCallback(self._output_delete_success, request)
@@ -44,7 +47,7 @@ class DELETEMixin(CommonMixin):
     def _remove_metadata(self, metadata, request, search_by):
         gridfs_image_ids = [value.get('gridfs_id') for value in metadata]
 
-        d = rotator_database.metadata.remove(search_by)
+        d = mongo_connection.get('rotator_database').metadata.remove(search_by)
 
         d.addCallback(self._image_delete_success, request, gridfs_image_ids)
         d.addErrback(self._image_delete_failure, request)
@@ -74,7 +77,7 @@ class DELETEMixin(CommonMixin):
         if postpath:
             search_by['_id'] = postpath[0]
 
-        d = rotator_database.metadata.find(search_by)
+        d = mongo_connection.get('rotator_database').metadata.find(search_by)
 
         d.addCallback(self._remove_metadata, request, search_by)
         d.addErrback(self._image_delete_failure, request)

@@ -41,6 +41,8 @@ class RootResource(Resource):
 
         pprint(return_dict)
 
+        request.setResponseCode(200)
+
         return dumps(return_dict)
 
 

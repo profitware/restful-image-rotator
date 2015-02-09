@@ -8,8 +8,11 @@ from json import dumps
 from twisted.protocols.basic import FileSender
 from twisted.web import server
 
+from txmongo.gridfs import GridFS
+
+from rotator.api import mongo_connection
 from rotator.api.v1.common import check_content_type, cut_path
-from rotator.api.v1.rotator_api.common import rotator_database, gridfs_instance, CommonMixin
+from rotator.api.v1.rotator_api.common import CommonMixin, ERROR_IMAGE_NOT_FOUND_IN_GRIDFS
 
 
 class GETMixin(CommonMixin):
@@ -20,6 +23,8 @@ class GETMixin(CommonMixin):
         print '_output_content_success', open_file
 
         open_file.close()
+
+        request.setResponseCode(200)
         request.finish()
 
     def _output_content(self, value, request):
@@ -34,8 +39,9 @@ class GETMixin(CommonMixin):
 
         return server.NOT_DONE_YET
 
-    def _get_gridfs_info(self, value, request):
-        print '_get_gridfs_info', value
+    def _get_gridfs_info(self, *args):
+        print '_get_gridfs_info', args
+        value, request = args
 
         request.setHeader('content-type', str(value.contentType))
 
@@ -49,7 +55,11 @@ class GETMixin(CommonMixin):
     def _get_image_content_success(self, value, request):
         print '_get_image_content_success', value
         if value and len(value):
-            d = gridfs_instance.get(value[0].get('gridfs_id'))
+            gridfs_id = value[0].get('gridfs_id')
+
+            print 'gridfs_id', gridfs_id
+
+            d = GridFS(mongo_connection['rotator_database']).get(gridfs_id)
 
             d.addCallback(self._get_gridfs_info, request)
             d.addErrback(self._get_image_content_failure, request)
@@ -57,7 +67,7 @@ class GETMixin(CommonMixin):
             return server.NOT_DONE_YET
 
         else:
-            return self._get_image_content_failure('Image not found in GridFS', request)
+            return self._get_image_content_failure(ERROR_IMAGE_NOT_FOUND_IN_GRIDFS, request)
 
     def _get_image_content_failure(self, error, request):
         print '_get_image_content_failure', error
@@ -65,11 +75,13 @@ class GETMixin(CommonMixin):
         request.setResponseCode(404)
 
         request.setHeader('content-type', 'application/json')
-        request.write(dumps({'error': error}))
+        request.write(dumps({'error': str(error)}))
         request.finish()
 
     def render_GET(self, request):
         assert check_content_type(request)
+
+        print 'render_GET'
 
         search_by = dict()
         is_one_item = False
@@ -87,7 +99,7 @@ class GETMixin(CommonMixin):
                 if postpath[1] == 'content':
                     get_content = True
 
-        d = rotator_database.metadata.find(search_by)
+        d = mongo_connection.get('rotator_database').metadata.find(search_by)
 
         if get_content:
             d.addCallback(self._get_image_content_success, request)

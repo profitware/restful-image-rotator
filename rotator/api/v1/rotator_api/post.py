@@ -9,11 +9,13 @@ from cStringIO import StringIO
 from twisted.internet.threads import deferToThread
 from twisted.web import server
 
+from txmongo.gridfs import GridFS
+
 from PIL import Image
 
+from rotator.api import mongo_connection
 from rotator.api.v1.common import form_resource_path, check_content_type
-from rotator.api.v1.rotator_api.common import rotator_database, gridfs_instance, CommonMixin, \
-    IMAGE_SIGNATURES, IMAGE_PIL_FORMATS
+from rotator.api.v1.rotator_api.common import CommonMixin, IMAGE_SIGNATURES, IMAGE_PIL_FORMATS
 
 
 class POSTMixin(CommonMixin):
@@ -44,7 +46,7 @@ class POSTMixin(CommonMixin):
         print '_process_image_success', image_id, rotated_image_id
 
     def _update_image_status(self, value, image_id, rotated_image_id):
-        rotator_database.metadata.find_and_modify(
+        mongo_connection.get('rotator_database').metadata.find_and_modify(
             query={'_id': image_id},
             update={'$set': {
                 'status': 'processed',
@@ -56,7 +58,7 @@ class POSTMixin(CommonMixin):
         print '_update_image_status', image_id
 
     def _image_to_gridfs_success(self, value, image_id):
-        rotator_database.metadata.find_and_modify(
+        mongo_connection.get('rotator_database').metadata.find_and_modify(
             query={'_id': image_id},
             update={'$set': {
                 'gridfs_id': value
@@ -67,7 +69,7 @@ class POSTMixin(CommonMixin):
         print '_image_to_gridfs_success', image_id
 
     def _add_image_to_gridfs(self, image_id, image_content, image_content_type):
-        d = gridfs_instance.put(
+        d = GridFS(mongo_connection['rotator_database']).put(
             image_content,
             content_type=image_content_type,
             md5hash=image_id
@@ -117,7 +119,7 @@ class POSTMixin(CommonMixin):
                             )
                             d.addCallback(self._process_image_success)
 
-        rotator_database.metadata.insert(uploaded_files_metadata, safe=False)
+        mongo_connection.get('rotator_database').metadata.insert(uploaded_files_metadata, safe=False)
 
         request.setResponseCode(201)
 

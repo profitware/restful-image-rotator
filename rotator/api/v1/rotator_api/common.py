@@ -4,10 +4,7 @@ __author__ = 'Sergey Sobko'
 
 from json import dumps
 
-from txmongo.gridfs import GridFS
-
-from rotator.api import mongo_connection
-from rotator.api.v1.common import cut_path, generate_link
+from rotator.api.v1.common import cut_path, generate_link, API_VERSION
 
 
 # Ref: http://en.wikipedia.org/wiki/List_of_file_signatures
@@ -22,9 +19,8 @@ IMAGE_PIL_FORMATS = {
 }
 
 ERROR_CHECK_BACK_LATER = 'CHECK_BACK_LATER'
-
-rotator_database = mongo_connection.rotator
-gridfs_instance = GridFS(rotator_database)
+ERROR_IMAGE_NOT_FOUND = 'ERROR_IMAGE_NOT_FOUND'
+ERROR_IMAGE_NOT_FOUND_IN_GRIDFS = 'ERROR_IMAGE_NOT_FOUND_IN_GRIDFS'
 
 
 class CommonMixin(object):
@@ -58,9 +54,10 @@ class CommonMixin(object):
                 return_dict = {
                     'image': images_list[0]
                 }
+                request.setResponseCode(200)
             except IndexError:
                 return_dict = {
-                    'error': 'Image not found'
+                    'error': ERROR_IMAGE_NOT_FOUND
                 }
                 request.setResponseCode(404)
         else:
@@ -69,6 +66,11 @@ class CommonMixin(object):
             }
             if is_posted:
                 return_dict['error'] = ERROR_CHECK_BACK_LATER
+                request.setResponseCode(201)
+            else:
+                request.setResponseCode(200)
+
+        return_dict['version'] = API_VERSION
 
         request.write(dumps(return_dict))
         request.finish()
