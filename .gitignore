@@ -59,3 +59,6 @@ target/
 
 # Virtualenv
 *-virtualenv
+
+# Twisted trial
+_trial_temp

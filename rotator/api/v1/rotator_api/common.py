@@ -21,13 +21,15 @@ IMAGE_PIL_FORMATS = {
     'image/jpeg': 'JPEG'
 }
 
+ERROR_CHECK_BACK_LATER = 'CHECK_BACK_LATER'
+
 mongo_connection = MongoConnectionPool()
 rotator_database = mongo_connection.rotator
 gridfs_instance = GridFS(rotator_database)
 
 
 class CommonMixin(object):
-    def _image_info_success(self, value, request, is_one_item):
+    def _image_info_success(self, value, request, is_one_item, is_posted=False):
         images_list = list()
         for image_dict in value:
 
@@ -66,6 +68,8 @@ class CommonMixin(object):
             return_dict = {
                 'images': images_list
             }
+            if is_posted:
+                return_dict['error'] = ERROR_CHECK_BACK_LATER
 
         request.write(dumps(return_dict))
         request.finish()

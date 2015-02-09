@@ -20,16 +20,19 @@ from rotator.api.v1.rotator_api.common import rotator_database, gridfs_instance,
 
 
 class POSTMixin(CommonMixin):
-    def _process_image(self, image_id, image_content, image_content_type):
+    def _process_image(self, image_id, image_content, image_content_type, angle):
         deferToThread(self._add_image_to_gridfs, image_id, image_content, image_content_type)
 
         image = Image.open(BytesIO(image_content))
-        image.rotate(180)
+        rotated_image = image.rotate(angle)
 
         output = StringIO()
-        image.save(output, format=IMAGE_PIL_FORMATS.get(image_content_type))
+        rotated_image.save(output, format=IMAGE_PIL_FORMATS.get(image_content_type))
+
         rotated_contents = output.getvalue()
         output.close()
+
+        print '_process_image', image_id, image_content_type
 
         return image_id, image_content, rotated_contents, image_content_type
 
@@ -41,6 +44,8 @@ class POSTMixin(CommonMixin):
         d = deferToThread(self._add_image_to_gridfs, rotated_image_id, rotated_contents, image_content_type)
         d.addCallback(self._update_image_status, image_id, rotated_image_id)
 
+        print '_process_image_success', image_id, rotated_image_id
+
     def _update_image_status(self, value, image_id, rotated_image_id):
         rotator_database.metadata.find_and_modify(
             query={'_id': image_id},
@@ -51,6 +56,8 @@ class POSTMixin(CommonMixin):
             upsert=True
         )
 
+        print '_update_image_status', image_id
+
     def _image_to_gridfs_success(self, value, image_id):
         rotator_database.metadata.find_and_modify(
             query={'_id': image_id},
@@ -60,6 +67,8 @@ class POSTMixin(CommonMixin):
             upsert=True
         )
 
+        print '_image_to_gridfs_success', image_id
+
     def _add_image_to_gridfs(self, image_id, image_content, image_content_type):
         d = gridfs_instance.put(
             image_content,
@@ -68,6 +77,8 @@ class POSTMixin(CommonMixin):
         )
         d.addCallback(self._image_to_gridfs_success, image_id)
 
+        print '_add_image_to_gridfs', image_id, image_content_type
+
     def render_POST(self, request):
         assert check_content_type(request)
 
@@ -75,6 +86,11 @@ class POSTMixin(CommonMixin):
 
         uploaded_files_metadata = list()
         md5hashes = set()
+        try:
+            angle = int(request.args.get('angle', list())[0])
+            assert angle in range(0, 360)
+        except (IndexError, TypeError, AssertionError):
+            angle = 180
 
         for form_field_name, files in request.args.iteritems():
             for uploaded_file in files:
@@ -99,7 +115,8 @@ class POSTMixin(CommonMixin):
                                 self._process_image,
                                 uploaded_file_hash,
                                 uploaded_file,
-                                file_content_type
+                                file_content_type,
+                                angle
                             )
                             d.addCallback(self._process_image_success)
 
@@ -108,6 +125,6 @@ class POSTMixin(CommonMixin):
         request.setResponseCode(201)
 
         d = deferLater(reactor, 0, lambda: uploaded_files_metadata)
-        d.addCallback(self._image_info_success, request, False)
+        d.addCallback(self._image_info_success, request, False, is_posted=True)
 
         return server.NOT_DONE_YET
