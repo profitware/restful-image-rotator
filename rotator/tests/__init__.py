@@ -22,11 +22,14 @@ class Request(DummyRequest):
         self.transport = StringTransport()
         self.headers['accept'] = '*/*'
         self.uri = 'http://localhost:8080/'
+        self.path = None
 
     def writeContent(self, data):
-        self.content.seek(0,2)
+        # pylint: disable=invalid-name
+
+        self.content.seek(0, 2)
         self.content.write(data)
-        self.content.seek(0,0)
+        self.content.seek(0, 0)
 
     def write(self, data):
         DummyRequest.write(self, data)
@@ -45,7 +48,9 @@ class TestAPI(unittest.TestCase):
         if mongo_connection.get('connected'):
             mongo_connection.get('connection').disconnect()
         mongo_connection['connection'] = acquire_new_connection_pool()
-        mongo_connection['rotator_database'] = get_rotator_database(mongo_connection['connection'], is_test=True)
+        mongo_connection['rotator_database'] = get_rotator_database(
+            mongo_connection['connection'], is_test=True
+        )
 
         self.rotator_database = mongo_connection['rotator_database']
         self.site = get_site()
@@ -91,6 +96,7 @@ class TestAPI(unittest.TestCase):
 
 
 def sleep(secs):
-    d = defer.Deferred()
-    reactor.callLater(secs, d.callback, None)
-    return d
+    # pylint: disable=no-member
+    deferred = defer.Deferred()
+    reactor.callLater(secs, deferred.callback, None)
+    return deferred

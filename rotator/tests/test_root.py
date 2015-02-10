@@ -10,7 +10,7 @@ from rotator.tests import TestAPI
 class TestRoot(TestAPI):
     @defer.inlineCallbacks
     def test_root(self):
-        res, req = yield self._test_request('GET', [])
+        _, req = yield self._test_request('GET', [])
 
         value = self._check_200(req, is_json=True)
 
@@ -19,7 +19,7 @@ class TestRoot(TestAPI):
 
     @defer.inlineCallbacks
     def test_v1(self):
-        res, req = yield self._test_request('GET', ['v1'])
+        _, req = yield self._test_request('GET', ['v1'])
 
         value = self._check_200(req, is_json=True)
 
@@ -31,6 +31,6 @@ class TestRoot(TestAPI):
 
     @defer.inlineCallbacks
     def test_nonexistent(self):
-        res, req = yield self._test_request('GET', ['nonexistent'])
+        _, req = yield self._test_request('GET', ['nonexistent'])
 
         self._check_404(req)

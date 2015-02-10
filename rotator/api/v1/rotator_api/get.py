@@ -16,9 +16,12 @@ from rotator.api.v1.rotator_api.common import CommonMixin, ERROR_IMAGE_NOT_FOUND
 
 
 class GETMixin(CommonMixin):
+    # pylint: disable=too-few-public-methods
 
     def _output_content_success(self, *args):
-        _value, open_file, request = args
+        # pylint: disable=no-self-use
+
+        _, open_file, request = args
 
         log_me('_output_content_success', open_file)
 
@@ -70,6 +73,8 @@ class GETMixin(CommonMixin):
             return self._get_image_content_failure(ERROR_IMAGE_NOT_FOUND_IN_GRIDFS, request)
 
     def _get_image_content_failure(self, error, request):
+        # pylint: disable=no-self-use
+
         log_me('_get_image_content_failure', error)
 
         request.setResponseCode(404)
@@ -79,6 +84,8 @@ class GETMixin(CommonMixin):
         request.finish()
 
     def render_GET(self, request):
+        # pylint: disable=invalid-name
+
         assert check_content_type(request)
 
         log_me('render_GET')

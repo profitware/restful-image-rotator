@@ -25,7 +25,11 @@ ERROR_IMAGE_NOT_FOUND_IN_GRIDFS = 'ERROR_IMAGE_NOT_FOUND_IN_GRIDFS'
 
 
 class CommonMixin(object):
+    # pylint: disable=too-few-public-methods
+
     def _image_info_success(self, value, request, is_one_item, is_posted=False):
+        # pylint: disable=no-self-use
+
         images_list = list()
         for image_dict in value:
 
@@ -37,7 +41,9 @@ class CommonMixin(object):
 
             if image_dict.get('status') == 'processed':
                 image_dict['links'].append(
-                    generate_link(request, cut_path([image_dict['rotated_image_id'], 'content']), 'rotated', 'GET')
+                    generate_link(request, cut_path(
+                        [image_dict['rotated_image_id'], 'content']
+                    ), 'rotated', 'GET')
                 )
 
             image_dict['id'] = image_dict.pop('_id')
@@ -77,6 +83,8 @@ class CommonMixin(object):
         request.finish()
 
     def _image_info_failure(self, error, request):
+        # pylint: disable=no-self-use
+
         return_dict = {
             'error': str(error)
         }

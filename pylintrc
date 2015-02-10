@@ -1,0 +1,20 @@
+[MASTER]
+profile=no
+persistent=yes
+
+[MESSAGES CONTROL]
+disable=missing-docstring,locally-disabled
+
+[BASIC]
+good-names=d,dl,_
+
+[TYPECHECK]
+zope=yes
+
+[SIMILARITIES]
+min-similarity-lines=6
+ignore-comments=yes
+ignore-docstrings=yes
+
+[MISCELLANEOUS]
+notes=FIXME,TODO

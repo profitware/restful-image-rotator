@@ -15,6 +15,8 @@ from rotator.api.v1.rotator_api.common import CommonMixin, ERROR_CHECK_BACK_LATE
 
 
 class DELETEMixin(CommonMixin):
+    # pylint: disable=too-few-public-methods
+
     def _image_get_info(self, value, request):
         d = mongo_connection.get('rotator_database').metadata.find({})
 
@@ -26,6 +28,8 @@ class DELETEMixin(CommonMixin):
         return server.NOT_DONE_YET
 
     def _output_delete_success(self, value, request):
+        # pylint: disable=no-self-use
+
         log_me('_output_delete_success', value)
 
         request.setResponseCode(200)
@@ -69,6 +73,8 @@ class DELETEMixin(CommonMixin):
         return self._image_get_info(None, request)
 
     def render_DELETE(self, request):
+        # pylint: disable=invalid-name
+
         assert check_content_type(request)
 
         request.setHeader('content-type', 'application/json')

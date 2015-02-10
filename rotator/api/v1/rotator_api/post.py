@@ -19,6 +19,8 @@ from rotator.api.v1.rotator_api.common import CommonMixin, IMAGE_SIGNATURES, IMA
 
 
 class POSTMixin(CommonMixin):
+    # pylint: disable=too-few-public-methods
+
     def _process_image(self, image_id, image_content, image_content_type, angle):
         deferToThread(self._add_image_to_gridfs, image_id, image_content, image_content_type)
 
@@ -36,16 +38,23 @@ class POSTMixin(CommonMixin):
         return image_id, image_content, rotated_contents, image_content_type
 
     def _process_image_success(self, value):
-        image_id, image_content, rotated_contents, image_content_type = value
+        image_id, _, rotated_contents, image_content_type = value
 
         rotated_image_id = md5(rotated_contents).hexdigest()
 
-        d = deferToThread(self._add_image_to_gridfs, rotated_image_id, rotated_contents, image_content_type)
+        d = deferToThread(
+            self._add_image_to_gridfs,
+            rotated_image_id,
+            rotated_contents,
+            image_content_type
+        )
         d.addCallback(self._update_image_status, image_id, rotated_image_id)
 
         log_me('_process_image_success', image_id, rotated_image_id)
 
     def _update_image_status(self, value, image_id, rotated_image_id):
+        # pylint: disable=unused-argument,no-self-use
+
         mongo_connection.get('rotator_database').metadata.find_and_modify(
             query={'_id': image_id},
             update={'$set': {
@@ -58,6 +67,8 @@ class POSTMixin(CommonMixin):
         log_me('_update_image_status', image_id)
 
     def _image_to_gridfs_success(self, value, image_id):
+        # pylint: disable=no-self-use
+
         mongo_connection.get('rotator_database').metadata.find_and_modify(
             query={'_id': image_id},
             update={'$set': {
@@ -79,6 +90,8 @@ class POSTMixin(CommonMixin):
         log_me('_add_image_to_gridfs', image_id, image_content_type)
 
     def render_POST(self, request):
+        # pylint: disable=invalid-name
+
         assert check_content_type(request)
 
         request.setHeader('content-type', 'application/json')
@@ -119,7 +132,9 @@ class POSTMixin(CommonMixin):
                             )
                             d.addCallback(self._process_image_success)
 
-        mongo_connection.get('rotator_database').metadata.insert(uploaded_files_metadata, safe=False)
+        mongo_connection.get('rotator_database').metadata.insert(
+            uploaded_files_metadata, safe=False
+        )
 
         request.setResponseCode(201)
 

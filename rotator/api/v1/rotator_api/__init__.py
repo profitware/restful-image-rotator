@@ -9,4 +9,6 @@ from rotator.api.v1.rotator_api.delete import DELETEMixin
 
 
 class RotatorResource(GETMixin, POSTMixin, DELETEMixin, RootResource):
+    # pylint: disable=too-few-public-methods
+
     isLeaf = True

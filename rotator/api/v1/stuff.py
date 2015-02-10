@@ -6,6 +6,8 @@ from rotator.api.v1 import RootResource
 
 
 class HTMLResource(RootResource):
+    # pylint: disable=too-few-public-methods
+
     isLeaf = True
 
     def render_GET(self, request):

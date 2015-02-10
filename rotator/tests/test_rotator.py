@@ -14,12 +14,14 @@ from rotator.tests.images import IMAGE_TRIANGLE, IMAGE_TRIANGLE_ROTATED
 
 
 class TestRotator(TestAPI):
+    # pylint: disable=unused-argument
+
     def _check_version(self, value):
         self.assertEqual(value.get('version'), '1.0')
 
     @defer.inlineCallbacks
     def step01_rotator_nonexistent(self, global_dict):
-        res, req = yield self._test_request('GET', ['v1', 'rotator', 'nonexistent'])
+        _, req = yield self._test_request('GET', ['v1', 'rotator', 'nonexistent'])
 
         value = self._check_404(req, is_json=True)
 
@@ -30,7 +32,7 @@ class TestRotator(TestAPI):
 
     @defer.inlineCallbacks
     def step02_rotator_empty(self, global_dict):
-        res, req = yield self._test_request('GET', ['v1', 'rotator'])
+        _, req = yield self._test_request('GET', ['v1', 'rotator'])
 
         value = self._check_200(req, is_json=True)
 
@@ -42,7 +44,7 @@ class TestRotator(TestAPI):
 
     @defer.inlineCallbacks
     def step03_rotator_empty_post(self, global_dict):
-        res, req = yield self._test_request('POST', ['v1', 'rotator'])
+        _, req = yield self._test_request('POST', ['v1', 'rotator'])
 
         value = self._check_code(req, 201, is_json=True)
 
@@ -55,7 +57,9 @@ class TestRotator(TestAPI):
 
     @defer.inlineCallbacks
     def step04_rotator_post(self, global_dict):
-        res, req = yield self._test_request('POST', ['v1', 'rotator'], triangle=[b64decode(IMAGE_TRIANGLE)])
+        _, req = yield self._test_request(
+            'POST', ['v1', 'rotator'], triangle=[b64decode(IMAGE_TRIANGLE)]
+        )
 
         value = self._check_code(req, 201, is_json=True)
 
@@ -74,7 +78,7 @@ class TestRotator(TestAPI):
     def step05_rotator_get_triangle(self, global_dict):
         triangle_id = global_dict.get('triangle_image_id')
 
-        res, req = yield self._test_request('GET', ['v1', 'rotator', triangle_id])
+        _, req = yield self._test_request('GET', ['v1', 'rotator', triangle_id])
 
         value = self._check_200(req, is_json=True)
 
@@ -100,31 +104,33 @@ class TestRotator(TestAPI):
         ))
 
     @defer.inlineCallbacks
-    def step06_rotator_get_triangle_content(self, global_dict):
+    def step06_rotator_triangle_content(self, global_dict):
         triangle_id = global_dict.get('triangle_image_id')
 
-        res, req = yield self._test_request('GET', ['v1', 'rotator', triangle_id, 'content'])
+        _, req = yield self._test_request('GET', ['v1', 'rotator', triangle_id, 'content'])
 
         value = self._check_code(req, 200, is_json=False)
         self.assertEqual(b64encode(value), IMAGE_TRIANGLE)
 
-        defer.returnValue(dict(test='step06_rotator_get_triangle_content'))
+        defer.returnValue(dict(test='step06_rotator_triangle_content'))
 
     @defer.inlineCallbacks
-    def step07_rotator_get_rotated_triangle_content(self, global_dict):
+    def step07_rotator_rotated_triangle(self, global_dict):
         triangle_rotated_image_id = global_dict.get('triangle_rotated_image_id')
 
-        res, req = yield self._test_request('GET', ['v1', 'rotator', triangle_rotated_image_id, 'content'])
+        _, req = yield self._test_request(
+            'GET', ['v1', 'rotator', triangle_rotated_image_id, 'content']
+        )
 
         value = self._check_code(req, 200, is_json=False)
         self.assertEqual(b64encode(value), IMAGE_TRIANGLE_ROTATED)
 
-        defer.returnValue(dict(test='step07_rotator_get_rotated_triangle_content'))
+        defer.returnValue(dict(test='step07_rotator_rotated_triangle'))
 
 
     @defer.inlineCallbacks
     def step08_rotator_delete_all(self, global_dict):
-        res, req = yield self._test_request('DELETE', ['v1', 'rotator'])
+        _, req = yield self._test_request('DELETE', ['v1', 'rotator'])
 
         value = self._check_code(req, 200, is_json=True)
         self.assertEqual(value.get('error'), ERROR_CHECK_BACK_LATER)
@@ -133,7 +139,7 @@ class TestRotator(TestAPI):
 
     @defer.inlineCallbacks
     def step09_rotator_empty(self, global_dict):
-        res, req = yield self._test_request('GET', ['v1', 'rotator'])
+        _, req = yield self._test_request('GET', ['v1', 'rotator'])
 
         value = self._check_200(req, is_json=True)
 
@@ -164,8 +170,12 @@ class TestRotator(TestAPI):
 
                 step = getattr(self, name)
                 try:
-                    d = yield step(global_dict)
-                    log_me(d)
-                    global_dict.update(d)
-                except Exception as e:
-                    self.fail("{} failed ({}: {})".format(step, type(e), e))
+                    # pylint: disable=broad-except
+
+                    return_dict = yield step(global_dict)
+                    log_me(return_dict)
+                    global_dict.update(return_dict)
+                except Exception as broad_exception:
+                    self.fail("{} failed ({}: {})".format(
+                        step, type(broad_exception), broad_exception
+                    ))

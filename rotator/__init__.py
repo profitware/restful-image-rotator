@@ -27,5 +27,7 @@ def get_site():
 
 
 if __name__ == '__main__':
+    # pylint: disable=no-member
+
     endpoints.serverFromString(reactor, "tcp:8080").listen(get_site())
     reactor.run()
