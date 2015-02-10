@@ -8,6 +8,7 @@ from twisted.internet import reactor, endpoints
 from rotator.api.v1 import RootResource, V1Resource
 from rotator.api.v1.rotator_api import RotatorResource
 from rotator.api.v1.stuff import HTMLResource
+from rotator.settings import LISTEN_ADDRESS
 
 
 def create_api():
@@ -29,5 +30,5 @@ def get_site():
 if __name__ == '__main__':
     # pylint: disable=no-member
 
-    endpoints.serverFromString(reactor, "tcp:8080").listen(get_site())
+    endpoints.serverFromString(reactor, LISTEN_ADDRESS).listen(get_site())
     reactor.run()
