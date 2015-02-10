@@ -9,7 +9,7 @@ from twisted.web import server
 
 from txmongo.gridfs import GridFS
 
-from rotator.api import mongo_connection
+from rotator.api import mongo_connection, log_me
 from rotator.api.v1.common import check_content_type, cut_path
 from rotator.api.v1.rotator_api.common import CommonMixin, ERROR_CHECK_BACK_LATER
 
@@ -21,12 +21,14 @@ class DELETEMixin(CommonMixin):
         d.addCallback(self._image_info_success, request, False)
         d.addErrback(self._image_info_failure, request)
 
-        print '_image_get_info ', value
+        log_me('_image_get_info ', value)
 
         return server.NOT_DONE_YET
 
     def _output_delete_success(self, value, request):
-        print '_output_delete_success', value
+        log_me('_output_delete_success', value)
+
+        request.setResponseCode(200)
 
         request.write(dumps({'error': ERROR_CHECK_BACK_LATER}))
         request.finish()
@@ -40,7 +42,7 @@ class DELETEMixin(CommonMixin):
         d.addCallback(self._output_delete_success, request)
         d.addErrback(self._image_delete_failure, request)
 
-        print '_image_delete_success', value, file_ids
+        log_me('_image_delete_success', value, file_ids)
 
         return server.NOT_DONE_YET
 
@@ -52,7 +54,7 @@ class DELETEMixin(CommonMixin):
         d.addCallback(self._image_delete_success, request, gridfs_image_ids)
         d.addErrback(self._image_delete_failure, request)
 
-        print '_remove_metadata ', search_by, gridfs_image_ids
+        log_me('_remove_metadata ', search_by, gridfs_image_ids)
 
         return server.NOT_DONE_YET
 
@@ -62,7 +64,7 @@ class DELETEMixin(CommonMixin):
         else:
             error, request = args
 
-        print '_image_delete_failure', error
+        log_me('_image_delete_failure', error)
 
         return self._image_get_info(None, request)
 

@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+
+__author__ = 'Sergey Sobko'
+
+
+MONGO_URI = 'mongodb://127.0.0.1:27017'
+USE_SIMPLE_PRINT = False

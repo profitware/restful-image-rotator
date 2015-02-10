@@ -2,16 +2,17 @@
 
 __author__ = 'Sergey Sobko'
 
-from pprint import pprint
 from json import dumps
 
 from twisted.web.resource import Resource
+
+from rotator.api import log_me
 from rotator.api.v1.common import *
 
 
 class RootResource(Resource):
     def getChild(self, name, request):
-        print 'getChild', name, request
+        log_me('getChild', name, request)
 
         assert check_content_type(request)
 
@@ -39,7 +40,7 @@ class RootResource(Resource):
             'links': links_list
         }
 
-        pprint(return_dict)
+        log_me(return_dict)
 
         request.setResponseCode(200)
 

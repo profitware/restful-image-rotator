@@ -2,33 +2,35 @@
 
 __author__ = 'Sergey Sobko'
 
+from twisted.internet import defer
+
 from rotator.tests import TestAPI
 
 
 class TestRoot(TestAPI):
+    @defer.inlineCallbacks
     def test_root(self):
-        def rendered(_ignored, res, req):
-            value = self._check_200(req, is_json=True)
+        res, req = yield self._test_request('GET', [])
 
-            self.assertEqual(value.get('version'), '1.0')
-            self.assertIn({'href': '/v1', 'method': 'GET', 'ref': 'list'}, value.get('links'))
+        value = self._check_200(req, is_json=True)
 
-        return self._test_request('GET', [], rendered)
+        self.assertEqual(value.get('version'), '1.0')
+        self.assertIn({'href': '/v1', 'method': 'GET', 'ref': 'list'}, value.get('links'))
 
+    @defer.inlineCallbacks
     def test_v1(self):
-        def rendered(_ignored, res, req):
-            value = self._check_200(req, is_json=True)
+        res, req = yield self._test_request('GET', ['v1'])
 
-            self.assertEqual(value.get('version'), '1.0')
+        value = self._check_200(req, is_json=True)
 
-            refs = ('edit', 'delete', 'list')
-            for link in value.get('links'):
-                self.assertIn(link.get('ref'), refs)
+        self.assertEqual(value.get('version'), '1.0')
 
-        return self._test_request('GET', ['v1'], rendered)
+        refs = ('edit', 'delete', 'list')
+        for link in value.get('links'):
+            self.assertIn(link.get('ref'), refs)
 
+    @defer.inlineCallbacks
     def test_nonexistent(self):
-        def rendered(_ignored, res, req):
-            self._check_404(req)
+        res, req = yield self._test_request('GET', ['nonexistent'])
 
-        return self._test_request('GET', ['nonexistent'], rendered)
+        self._check_404(req)

@@ -13,7 +13,7 @@ from txmongo.gridfs import GridFS
 
 from PIL import Image
 
-from rotator.api import mongo_connection
+from rotator.api import mongo_connection, log_me
 from rotator.api.v1.common import form_resource_path, check_content_type
 from rotator.api.v1.rotator_api.common import CommonMixin, IMAGE_SIGNATURES, IMAGE_PIL_FORMATS
 
@@ -31,7 +31,7 @@ class POSTMixin(CommonMixin):
         rotated_contents = output.getvalue()
         output.close()
 
-        print '_process_image', image_id, image_content_type
+        log_me('_process_image', image_id, image_content_type)
 
         return image_id, image_content, rotated_contents, image_content_type
 
@@ -43,7 +43,7 @@ class POSTMixin(CommonMixin):
         d = deferToThread(self._add_image_to_gridfs, rotated_image_id, rotated_contents, image_content_type)
         d.addCallback(self._update_image_status, image_id, rotated_image_id)
 
-        print '_process_image_success', image_id, rotated_image_id
+        log_me('_process_image_success', image_id, rotated_image_id)
 
     def _update_image_status(self, value, image_id, rotated_image_id):
         mongo_connection.get('rotator_database').metadata.find_and_modify(
@@ -55,7 +55,7 @@ class POSTMixin(CommonMixin):
             upsert=True
         )
 
-        print '_update_image_status', image_id
+        log_me('_update_image_status', image_id)
 
     def _image_to_gridfs_success(self, value, image_id):
         mongo_connection.get('rotator_database').metadata.find_and_modify(
@@ -66,7 +66,7 @@ class POSTMixin(CommonMixin):
             upsert=True
         )
 
-        print '_image_to_gridfs_success', image_id
+        log_me('_image_to_gridfs_success', image_id)
 
     def _add_image_to_gridfs(self, image_id, image_content, image_content_type):
         d = GridFS(mongo_connection['rotator_database']).put(
@@ -76,7 +76,7 @@ class POSTMixin(CommonMixin):
         )
         d.addCallback(self._image_to_gridfs_success, image_id)
 
-        print '_add_image_to_gridfs', image_id, image_content_type
+        log_me('_add_image_to_gridfs', image_id, image_content_type)
 
     def render_POST(self, request):
         assert check_content_type(request)

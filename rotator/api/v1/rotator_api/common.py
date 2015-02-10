@@ -4,6 +4,7 @@ __author__ = 'Sergey Sobko'
 
 from json import dumps
 
+from rotator.api import log_me
 from rotator.api.v1.common import cut_path, generate_link, API_VERSION
 
 
@@ -45,7 +46,7 @@ class CommonMixin(object):
             except KeyError:
                 pass
 
-            print image_dict
+            log_me(image_dict)
 
             images_list.append(image_dict)
 

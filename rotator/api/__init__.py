@@ -2,11 +2,16 @@
 
 __author__ = 'Sergey Sobko'
 
+from pprint import pformat
+
+from twisted.python import log
 from txmongo.connection import ConnectionPool
+
+from rotator.settings import MONGO_URI, USE_SIMPLE_PRINT
 
 
 def acquire_new_connection_pool():
-    return ConnectionPool()
+    return ConnectionPool(uri=MONGO_URI)
 
 
 def get_rotator_database(connection, is_test=False):
@@ -24,3 +29,15 @@ mongo_connection['rotator_database'] = get_rotator_database(
     mongo_connection.get('connection'),
     is_test=False
 )
+
+
+log.startLogging(log.StdioOnnaStick())
+
+
+def log_me(*args, **kwargs):
+    fmt_msg = pformat([arg for arg in args], width=80, indent=2)
+
+    if USE_SIMPLE_PRINT:
+        print fmt_msg
+    else:
+        log.msg(fmt_msg)

@@ -10,7 +10,7 @@ from twisted.web import server
 
 from txmongo.gridfs import GridFS
 
-from rotator.api import mongo_connection
+from rotator.api import mongo_connection, log_me
 from rotator.api.v1.common import check_content_type, cut_path
 from rotator.api.v1.rotator_api.common import CommonMixin, ERROR_IMAGE_NOT_FOUND_IN_GRIDFS
 
@@ -20,7 +20,7 @@ class GETMixin(CommonMixin):
     def _output_content_success(self, *args):
         _value, open_file, request = args
 
-        print '_output_content_success', open_file
+        log_me('_output_content_success', open_file)
 
         open_file.close()
 
@@ -30,7 +30,7 @@ class GETMixin(CommonMixin):
     def _output_content(self, value, request):
         open_file = BytesIO(value)
 
-        print '_output_content', open_file
+        log_me('_output_content', open_file)
 
         d = FileSender().beginFileTransfer(open_file, request)
 
@@ -40,7 +40,7 @@ class GETMixin(CommonMixin):
         return server.NOT_DONE_YET
 
     def _get_gridfs_info(self, *args):
-        print '_get_gridfs_info', args
+        log_me('_get_gridfs_info', args)
         value, request = args
 
         request.setHeader('content-type', str(value.contentType))
@@ -53,11 +53,11 @@ class GETMixin(CommonMixin):
         return server.NOT_DONE_YET
 
     def _get_image_content_success(self, value, request):
-        print '_get_image_content_success', value
+        log_me('_get_image_content_success', value)
         if value and len(value):
             gridfs_id = value[0].get('gridfs_id')
 
-            print 'gridfs_id', gridfs_id
+            log_me('gridfs_id', gridfs_id)
 
             d = GridFS(mongo_connection['rotator_database']).get(gridfs_id)
 
@@ -70,7 +70,7 @@ class GETMixin(CommonMixin):
             return self._get_image_content_failure(ERROR_IMAGE_NOT_FOUND_IN_GRIDFS, request)
 
     def _get_image_content_failure(self, error, request):
-        print '_get_image_content_failure', error
+        log_me('_get_image_content_failure', error)
 
         request.setResponseCode(404)
 
@@ -81,7 +81,7 @@ class GETMixin(CommonMixin):
     def render_GET(self, request):
         assert check_content_type(request)
 
-        print 'render_GET'
+        log_me('render_GET')
 
         search_by = dict()
         is_one_item = False
@@ -89,7 +89,7 @@ class GETMixin(CommonMixin):
 
         postpath = cut_path(request.postpath)
 
-        print request.prepath, request.path, request.uri, postpath
+        log_me(request.prepath, request.path, request.uri, postpath)
 
         if postpath:
             search_by['_id'] = postpath[0]
